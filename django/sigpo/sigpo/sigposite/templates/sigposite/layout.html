@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>SIGPO</title>
+		<link rel="icon" href="../../static/sigposite/images/logo.jpg" type="image/x-icon">
+		<link rel="stylesheet" type="text/css"  href="{% static 'sigposite/styles.css' %}">
+		<script src = "{% static 'sigposite/script.js' %}"></script>
+	</head>
+	<body>
+		<table>
+                	<tr>
+                        	<td>
+                                	<a href="{% url 'index' %}">
+                                        	<img src="../../static/sigposite/images/logo.jpg" alt="Accueil" width="250vw" height="250vw" style="border-radius: 10px;">
+	                                </a>
+        	                </td>
+                	        <td>
+                        	        <h1 style="padding: 1px 1px; margin: 1px 1px 1px 1px;">{{ titre }}</h1>
+	                        </td>
+        	        </tr>
+	        </table>
+		<div align="right">
+        	        <a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+	                <a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+        	        <a href="{% url 'control' %}"><p>Control</p></a></li>
+        	        <a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+                	<a href="{% url 'nouveau' %}"><p>+</p></a></li></br>
+	        </div>
+		{% block body %}
+		{% endblock %}
+	</body>
+	<a href="{% url 'index' %}">
+		<img src="../../static/sigposite/images/logo.jpg" alt="Accueil" width="180vw" height="180vw" align="center" style="border-radius: 8px">
+		<!--img src="../../static/sigposite/images/home.png" alt="Accueil" width="80vw" height="80vw"-->
+        </a>
+</html>

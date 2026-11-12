@@ -1,0 +1,23 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<h1>{{ compte }} </h1>
+
+	<form action="{% url 'confirmer' table_id %}" method="post" >
+		{{ formset.management_form }}
+		<table>
+			{% for form in formset %}
+				{{ form }}
+			{% endfor %}
+		</table>
+		<input type="text" id="qte" name="qte" value="Ajouter"/>
+		<input type="submit" value="Ajouter"/>{{ add }}
+	</form>
+	<a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a>
+	
+	<a href="{% url 'index' %}">Accueil</a>
+
+{% endblock %}

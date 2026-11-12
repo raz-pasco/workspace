@@ -1,0 +1,26 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<h1>{{ table }} </h1>
+
+	<form action="{% url 'confirmer' table_id %}" method="post" >
+		{% csrf_token %}
+		<input type="submit" value="Ajouter"/>
+		{{ formset.management_form }}
+                {% for form in formset %}
+		<ul>
+			{{ form.designation }}
+			{{ form.quantite }}
+			<input type="button" id="moins_{{ forloop.counter0 }}" name="moins_{{ forloop.counter0 }}" value="-" onclick="bt_moins({{ forloop.counter0 }})">
+                        <input type="button" id="plus_{{ forloop.counter0 }}" name="plus_{{ forloop.counter0 }}" value="+" onclick="bt_plus({{ forloop.counter0 }})">
+		</ul>
+		{% endfor %}
+		<!--input type="checkbox" id="add" name="add" /-->
+		<input type="hidden" id="add" name="add" value="{{ add }}"/>
+		<input type="submit" value="Ajouter"/>
+	</form>
+	<!--a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a-->
+{% endblock %}

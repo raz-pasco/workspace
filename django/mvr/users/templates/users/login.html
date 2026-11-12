@@ -1,0 +1,42 @@
+{% extends "users/layout.html" %}
+
+{% block content %}
+
+        <div class="col-sm-10 ">
+
+          {# Display django.contrib.messages as Bootstrap alerts #}
+          {% bootstrap_messages %}
+
+          {# Display a form #}
+          <form action="/url/to/submit/" method="post" class="form">
+            {% csrf_token %}
+
+            {% bootstrap_form form %}
+
+            {% bootstrap_button button_type="submit" content="OK" %}
+            {% bootstrap_button button_type="reset" content="Cancel" %}
+
+          </form>
+        </div>
+
+  <div class="center">
+	  <form method="post" class="card" novalidate>
+	  	{% csrf_token %}
+	    <h2 class="text-center">Log in to your account 123</h2>
+
+		{% for field in form %}
+	    		{{ field.label_tag }}
+	        	{{ field }}
+	        	{% if field.errors %}
+	        		<small>{{ field.errors|striptags }}</small>
+	        	{% endif %}
+		{% endfor %}
+
+		<input type="submit" value="Login-users" class="btn btn-primary">
+		<hr>
+		<p class="text-center">Forgot your password <a href="#">Reset Password</a></p>
+		<p class="text-center">Don't have a account? <a href="{%url 'register'%}">Join Now</a></p>
+	</form>
+</div>
+
+{%endblock content%}

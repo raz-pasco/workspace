@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    <title>Polls dev login</title>
+{% endblock %}
+
+{% block content %}
+    {% if form.non_field_errors %}
+        <p>Your username and password didn't match. <a href="{% url 'login' %}">Please try again.</a></p>
+    {% else %}
+        {% if next %}
+            {% if user.is_authenticated %}
+                <p>Your account doesn't have access to this page. To proceed,
+                please <a href="{% url 'login' %}">login</a> with an account that has access.</p>
+            {% else %}
+                <!--<p>Please login to see this page.</p>-->
+                <div class="center">
+                    <form method="post" class="card" novalidate>
+                        {% csrf_token %}
+                        <h2 class="text-center">Log in to your account</h2>
+                        <p class="text-center">
+                        <table>
+                            {% for field in form %}
+                                <tr>
+                                <td class="text-center">{{ field.label_tag }}</td>
+                                <td class="text-left">
+                                {{ field }}
+                                {% if field.errors %}
+                                    <small style="color:red;">{{ field.errors|striptags }}</small>
+                                {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <td></td>
+                                <td class="text-center"><input type="submit" value="Login" class="btn btn-primary"></td>
+                            </tr>
+                        </table>
+                        </p>
+            {% endif %}
+        {% else %}
+                <div class="center">
+                    <form method="post" class="card" novalidate>
+                        {% csrf_token %}
+                        <h2 class="text-center">Log in to your account</h2>
+                        <p class="text-center">
+                        <table>
+                            {% for field in form %}
+                                <tr>
+                                <td class="text-center">{{ field.label_tag }}</td>
+                                <td class="text-left">
+                                {{ field }}
+                                {% if field.errors %}
+                                    <small style="color:red;">{{ field.errors|striptags }}</small>
+                                {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr>
+                                <td></td>
+                                <td class="text-center"><input type="submit" value="Login" class="btn btn-primary"></td>
+                            </tr>
+                        </table>
+                        </p>
+        {% endif %}
+    {% endif %}
+            <hr>
+            <p class="text-center">Forgot your password <a href="{% url 'password_reset' %}">Reset Password</a></p>
+            <p class="text-center">Don't have a account? <a href="#">Join Now</a></p>
+        </form>
+    </div>
+
+{% endblock %}

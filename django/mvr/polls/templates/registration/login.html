@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{# Load the tag library #}
+{% load django_bootstrap5 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block title %}
+    <title>Polls dev login</title>
+{% endblock %}
+
+{% block content %}
+    {% if form.non_field_errors %}
+        <p>Your username and password didn't match. <a href="{% url 'login' %}">Please try again.</a></p>
+    {% else %}
+        {% if next %}
+            {% if user.is_authenticated %}
+                <p>Your account doesn't have access to this page. To proceed,
+                please <a href="{% url 'login' %}">login</a> with an account that has access.</p>
+            {% else %}
+                <!--<p>Please login to see this page.</p>-->
+                <div class="center">
+<!--                    <form method="post" class="card" novalidate>-->
+                    <form method="post" class="card form-signin" novalidate>
+                        {% csrf_token %}
+                        <h2 class="text-center">Log in to your account</h2>
+                        <p class="text-center">
+                        <table>
+                            <tr>
+                                {% bootstrap_form form layout='inline' %}
+                            </tr>
+                            <tr>
+                                {% bootstrap_button "Login" button_type="submit" button_class="btn-primary" %}
+                            </tr>
+                        </table>
+                        </p>
+                    </form>
+        {% endif %}
+        {% else %}
+                <div class="center">
+<!--                    <form method="post" class="card" novalidate>-->
+                    <form method="post" class="card form-signin" novalidate>
+                        {% csrf_token %}
+                        <h2 class="text-center">Log in to your account</h2>
+                        <p class="text-center">
+                        <table>
+                            <tr>
+                                {% bootstrap_form form layout='inline' %}
+                            </tr>
+                            <tr>
+                                {% bootstrap_button "Login" button_type="submit" button_class="btn-primary" %}
+                            </tr>
+                        </table>
+                        </p>
+                    </form>
+        {% endif %}
+    {% endif %}
+            <hr>
+            <p class="text-center">Forgot your password <a href="{% url 'password_reset' %}">Reset Password</a></p>
+            <p class="text-center">Don't have a account? <a href="{% url 'register' %}">Join Now</a></p>
+    </div>
+
+{% endblock %}

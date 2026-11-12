@@ -1,0 +1,50 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb  16 03:12:03 2026
+
+@author: Pasco
+"""
+from django.conf import settings
+from django.http import HttpResponseRedirect
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.urls import reverse
+from polls import views
+
+# Create your views here.
+def index(request):
+    # If no user is signed in, return to login page:
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect(reverse("login"))
+#    return HttpResponseRedirect( reverse("polls:index", kwargs={"app_label": "polls"}))
+#    return HttpResponseRedirect( reverse("admin:app_list", kwargs={"app_label": "polls"}))
+    return HttpResponseRedirect(reverse("polls:index"))
+
+
+def login_view(request):
+    if request.method == "POST":
+        # Accessing username and password from form data
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        # Check if username and password are correct, returning User object if so
+        user = authenticate(request, username=username, password=password)
+
+        # If user object is returned, log in and route to index page:
+        if user:
+            login(request, user)
+            return HttpResponseRedirect(reverse("index"))
+        # Otherwise, return login page again with new context
+        else:
+            return render(request, "users/login.html", {
+                "message": "Invalid Credentials"
+            })
+    return render(request, "users/login.html")
+
+def logout_view(request):
+    # Pass is a simple way to tell python to do nothing.
+    """pass"""
+    logout(request)
+    return render(request, "users/login.html", {
+                "message": "Logged Out"
+            })

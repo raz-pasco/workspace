@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <h1>Welcome, {{ request.user.first_name }}</h1>
+        <ul>
+            <li>Username: {{ request.user.username }}</li>
+            <li>Email: {{ request.user.email }}</li>
+        </ul>
+
+        <a href="{% url 'logout' %}">Log Out</a>
+    {% else %}
+        <p>Please login to see this page.</p>
+    {% endif %}
+{% endblock %}

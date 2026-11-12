@@ -1,0 +1,12 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<form name="newCommande" action="/your-name/" method="post">
+		{% csrf_token %}
+		{{ formset.management_form }}
+		{% for form in formset %}
+			<button type = 'button' onclick = 'fill("{{ form }}","{{ form.quantite }}")' >Add</button>{{ form }}</br>
+		{% endfor %}
+		<input type="submit" value="Ajouter">
+	</form>
+{% endblock %}

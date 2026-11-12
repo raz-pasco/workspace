@@ -1,0 +1,14 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+        <h1>Clients</h1>
+        <table>
+                {% for client in compte_list %}
+			<tr>
+				<td>
+					<a href="{% url 'commandes' client.id  %}">{{ client.table }} {{ client.nom }} {{ client.date_visite }}</a>
+				</td>
+			</tr>
+                {% endfor %}
+        </table>
+{% endblock %}

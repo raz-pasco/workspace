@@ -1,0 +1,22 @@
+{% load static %}
+{% load app_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Authentification</title>
+        <link rel="icon" type="image/png" href="/images/favicon.png">
+    </head>
+    <body>
+        {% if user.is_authenticated %}
+            Hallo {{ user|capfirst }},
+            your {{ num_visits|number_to_words:"fr" }} visite(s)
+
+            <li>User: {{ user.get_username }}</li>
+            User: {{ user.get_username }}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </body>
+</html>

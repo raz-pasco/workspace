@@ -1,0 +1,69 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<div align="right">
+	        <a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+	        <a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+	        <a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+		<a href="{% url 'nouveau' %}"><p>+</p></a></li></br>
+	</div>
+      	<form action="{% url 'vente' %}" method="POST">
+	{% csrf_token %}
+	<div style="overflow-x:auto;">
+	<table align="center">
+		<!--thead>
+		<!--tr bgcolor="#b58900">
+		<tr align="center">
+                        <td><input type= "submit" value="Livrer"/></td>
+                </tr-->
+		<tr>
+			<td></td>
+			<td bgcolor="#b58900" align="right">Date debut</td>
+			<td bgcolor="#b58900" align="left"><ul>
+				{{ form.date_debut }}
+			</ul></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td bgcolor="#b58900" align="right">Date fin</td>
+			<td bgcolor="#b58900" align="left"><ul>
+				{{ form.date_fin }}
+			</ul></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td bgcolor="#b58900" align="right"></td>
+			<td bgcolor="#b58900" align="left"><input type="submit" value="Consulter"/></td>
+			<td></td>
+		</tr>
+
+		<!--
+		<tr align="center">
+                        <!--td><input type= "submit" value="Paiement partiel"/></td>
+                        <td><input type= "submit" value="Livrer"/></td>
+                </tr>
+		</tbody-->
+	</table>
+	</div>
+	</form>
+	<div align="right">
+	        <a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+	        <a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+	        <a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+		<a href="{% url 'nouveau' %}"><p>+</p></a></li></br>
+	</div>
+<!--	<form action="addcommande" method="post" >
+		<input type = "text" name = "table" value = "{{ table.id }}"></br>
+		<input type = "text" name = "designation"  value = "{{ table.id }}"></br>
+		<input type = "text" name = "quantite" value = "{{ table.id }}"></br>
+		<input type = "submit" value = "Ajouter" >
+	</form>
+	<a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a>
+-->	
+
+{% endblock %}

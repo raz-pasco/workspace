@@ -1,0 +1,16 @@
+{% load static %}
+{% load app_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Authentification</title>
+        <link rel="icon" type="image/png" href="/images/favicon.png">
+    </head>
+    <body>
+        Hallo {{ user|capfirst }},
+        your {{ num_visits|number_to_words:"fr" }} visit
+        {% block body %}
+        {% endblock %}
+    </body>
+</html>

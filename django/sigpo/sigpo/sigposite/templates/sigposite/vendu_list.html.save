@@ -1,0 +1,94 @@
+cd
+
+
+
+
+		 extends "sigposite/layout.html" %}
+nnnnnnhhhh			5
+{% load static %}
+{% block body %}
+	<div align="right">
+	        <a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+	        <a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+	        <a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+		<a href="{% url 'nouveau' %}"><p>+</p></a></li></br>
+	</div>
+      	<form action="" method="POST">
+	{% csrf_token %}
+	<div style="overflow-x:auto;">
+	<table align="center">
+		<!--thead>
+		<!--tr bgcolor="#b58900">
+		<tr align="center">
+                        <td><input type= "submit" value="Livrer"/></td>
+                </tr-->
+		<tr bgcolor="#b58900">
+			<!--<th>Heure</th>-->
+			<th>
+	exit
+nput type="hidden" id="livre" name="livre" value="{{ livre }}"/>
+				<input type="hidden" id="paye" name="paye" value="{{ paye }}"/>
+				<input type="hidden" id="max" name="max" value="{{ max }}"/>
+				Designation
+			</th>
+			<th>Prix de vente</th>
+			<th>Quantité</th>
+			<th>Montant</th>
+			<!--<th><input type="checkbox" id="livre_all" /></th>
+			<!--th><input type="checkbox" id="paye_all" /></th-->
+		</tr>
+		<!--/thead-->
+		<!--tbody-->
+		{% for commande in vendu_list %}
+			<!--tr bgcolor="{% cycle '#FFFFFF' '#EFEFEF' %}">
+			<tr bgcolor="{% cycle '#FFFFFF' '#b58900' %}"-->
+			<tr class="{% cycle 'ucolorer' 'colorer' %}">
+				<!--<td align="center">{# commande.heur_cmd | time:"H:i:s" #}</td>-->
+				<td>
+					<input type="hidden" id="livre_id_{{ forloop.counter0 }}" name="livre_id_{{ forloop.counter0 }}" placeholder="Livré"/>
+					<!--input type="hidden" id="paye_id_{{ forloop.counter0 }}" name="paye_id" placeholder="Payé"/-->
+					<input type="hidden" id="_id_{{ forloop.counter0 }}" name="_id_{{ forloop.counter0 }}" value="{{ commande.id }}"/>
+					{{ commande.designation }}
+				</td>
+				<td align="right">{{ commande.prix_vente }}</td>
+				<td align="center">{{ commande.qte }}</td>
+				<td align="right">{{ commande.montant }}</td>
+				<!--td align="center"><input type="checkbox" id="livre_{{ forloop.counter0 }}" onchange="check_id_livre({{ forloop.counter0 }})" {% if commande.livre %}checked{% endif %}/></td>
+				<!--td><input type="checkbox" id="paye_{{ forloop.counter0 }}" onchange="check_id_paye({{ forloop.counter0 }}) "{% if commande.livre %}checked{% endif %}/></td-->
+			</tr>
+		{% endfor %}
+
+		<tr>
+			<td bgcolor="#b58900" align="center"></td>
+			<td bgcolor="#b58900" align="center"><b>Total</b></td>
+			<td bgcolor="#b58900" align="right"><b>Ariary</b></td>
+			<td bgcolor="#b58900" align="right"><b>{{ total }}</b></td>
+                </tr>
+		<!--
+		<tr align="center">
+                        <!--td><input type= "submit" value="Paiement partiel"/></td>
+                        <td><input type= "submit" value="Livrer"/></td>
+                </tr>
+		</tbody-->
+	</table>
+	</div>
+	</form>
+	<div align="right">
+	        <a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+	        <a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+	        <a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+		<a href="{% url 'nouveau' %}"><p>+</p></a></li></br>
+	</div>
+<!--	<form action="addcommande" method="post" >
+		<input type = "text" name = "table" value = "{{ table.id }}"></br>
+		<input type = "text" name = "designation"  value = "{{ table.id }}"></br>
+		<input type = "text" name = "quantite" value = "{{ table.id }}"></br>
+		<input type = "submit" value = "Ajouter" >
+	</form>
+	<a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a>
+-->	
+
+{% endblock %}

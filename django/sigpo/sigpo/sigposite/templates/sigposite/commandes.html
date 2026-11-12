@@ -1,0 +1,46 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<h1>Detail commandes <br>{% for table in title %} {{ table.table }} {% endfor%} </h1>
+
+	<table>
+		<tr>
+			<input type="hidden" id="paye" name="paye" value="{{ paye }}"/>
+			<th>Designation</th>
+			<th>Quantité</th>
+			<th>Montant</th>
+		</tr>
+		{% for commande in commandes %}
+			<tr background="{% cycle '#FFFFFF' '#AAAAAA' %}">
+				<td>{{ commande.designation }}</td>
+				<td>{{ commande.quantite }}</td>
+				<td>{{ commande.montant }}</td>
+			</tr>
+		{% endfor %}
+		<tr>
+			<td></td>
+			<td>Total</td>
+			<td>{% for t in totals %} {{ totals.total }} {% endfor%}</td>
+                </tr>
+		<tr>
+                        <td>Paiement partiel</td>
+                        <td>Payer addition</td>
+                        <td><a href = "../newCommande/{% for table in title %}{{ table.table_id }} {% endfor%}">Ajouter commande{% for table in title %} {{ table.table_id }} {% endfor%}</a></td>
+                </tr>
+	</table>
+	<form action="addcommande" method="post" >
+		<input type = "text" name = "table" value = "{{ table.id }}"></br>
+		<input type = "text" name = "designation"  value = "{{ table.id }}"></br>
+		<input type = "text" name = "quantite" value = "{{ table.id }}"></br>
+		<input type = "submit" value = "Ajouter" >
+	</form>
+	<a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a>
+	
+	<a href="{% url 'index' %}">Retour</a>
+
+
+
+{% endblock %}

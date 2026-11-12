@@ -1,0 +1,30 @@
+{% extends "registration/layout.html" %}
+
+{% block body %}
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        <table>
+        <tr>
+            <td>{{ form.username.label_tag }}</td>
+            <td><input type="text", name="username", placeholder="Username">{{ form.username }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.password.label_tag }}</td>
+            <td><input type="password", name="password", placeholder="Password">{{ form.password }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+            <input type="submit", value="Login">
+            <input type="hidden" name="next" value="{{ next }}">
+            </td>
+        </tr>
+        </table>
+    </form>
+    {# Assumes you set up the password_reset view in your URLconf #}
+    <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
+{% endblock %}

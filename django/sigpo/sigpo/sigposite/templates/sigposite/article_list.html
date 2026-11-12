@@ -1,0 +1,42 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<form action="{% url 'confirmer' table_id %}" method="post" >
+		{% csrf_token %}
+		<input type="submit" value="Ajouter"/>
+		<table>
+			<tr>
+			<td>
+			{{ formset.management_form }}
+			{% for form in formset %}
+				{% if not "Poisson" in form.designation.value %}
+					<ul id="{{ form.designation.value.0 }}">
+				{% else %}
+					<ul id="{{ form.designation.value.0 }}{{ form.designation.value.8 }}">
+				{% endif %}
+				{{ form.designation }}
+				{{ form.quantite }}
+				<input type="button" id="moins_{{ forloop.counter0 }}" name="moins_{{ forloop.counter0 }}" value="-" onclick="bt_moins({{ forloop.counter0 }})">
+				<input type="button" id="plus_{{ forloop.counter0 }}" name="plus_{{ forloop.counter0 }}" value="+" onclick="bt_plus({{ forloop.counter0 }})">
+			</ul>
+			{% endfor %}
+			</td>
+			</tr>
+			</table>
+
+			<div style="position: fixed; left: 94vw; top: 0; margin: 0 auto; display: flex; flex-direction: column; bottom: 0px; overflow: scroll; ">
+					{% for alpha in design  %}
+						<a href="#{{ alpha.designation }}"><p class="alpha">{{ alpha.designation }}</p></a>
+					{% endfor %}
+			</div>
+		<!-- input type="button" id="bt_cmd" name="bt_cmd" value="Inserer"/ 
+		<input type="checkbox" id="add" name="add" {% if add %} checked {% endif %}"/-->
+		<input type="hidden" id="add" name="add" value="{{ add }}"/>
+		<input type="submit" value="Ajouter"/>
+	</form>
+	<!--a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a-->
+
+{% endblock %}

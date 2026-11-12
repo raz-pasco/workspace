@@ -1,0 +1,22 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load app_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <link rel="stylesheet" href="{% static 'polls/style.css' %}">
+    <header class="header">
+
+    </header>
+    <body>
+        Hallo {{ user|capfirst }},
+        your {{ num_visits|number_to_words:"fr" }} visit
+        {% block content %}
+        {% endblock %}
+    </body>
+    <footer class="footer">
+        <div class="container">
+            <p>© Copyright {% now "Y" %} by <a href="#">Python Tutorial</a></p>
+        </div>
+    </footer>
+</html>

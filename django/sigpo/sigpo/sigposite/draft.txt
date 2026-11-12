@@ -1,0 +1,56 @@
+#    lcd = list(commande.values())
+#    p = []
+#    d = []
+#    q = []
+#    m = []
+#    l = {}
+#    for i in range(len(lcd)):
+#         prix = Produit.objects.get(id = lcd[i]['designation_id']).prix_vente
+#         design = Produit.objects.get(id = lcd[i]['designation_id']).designation
+#         quantite = list(lcd[i].values())[3]
+#         montant = prix * quantite
+#         q.append( quantite )
+#         p.append(prix)
+#         d.append(design)
+#         m.append(montant)
+#         l[design]=montant
+#         commande.annotate( mt = Sum ( prix * quantite ) )
+#    a = zip( commande , l )
+#    b = commande.headline()
+#    prod = Produit.objects.annotate( mont = commande. )
+#    prix = produits.produit_set.all ()
+#    commande.prd_cmd = F(prd_cmd)
+#    produit : Produit.objects.filter ( designation = F('prd_cmd'))
+#    produit.prix_vent = F('prix_vent')
+# sqlite>
+#       queryset.annotate(prod = RawSQL( "
+#               SELECT
+#                       designation ,
+#                       prix_vente ,
+#                       quantite ,
+#                       prix_vente * quantite AS montant
+#               FROM
+#                       sigposite_produit
+#               INNER JOIN
+#                       sigposite_commande
+#               ON
+#                       sigposite_produit.id = sigposite_commande.designation_id
+#               WHERE
+#                       table_id = %s", table_id ,
+#               )
+#       THB 33cl|2500|2|5000
+#       Calmar|8000|1|8000
+# sqlite> SELECT
+#               designation ,
+#               prix_vente ,
+#               quantite ,
+#               SUM(prix_vente * quantite) AS total
+#         FROM
+#               sigposite_produit
+#         INNER JOIN
+#               sigposite_commande
+#         ON
+#               sigposite_produit.id = sigposite_commande.designation_id
+#         WHERE
+#               table_id = 1;
+#       THB 33cl|2500|2|13000

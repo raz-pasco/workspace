@@ -1,0 +1,106 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% load l10n %}
+{% block body %}
+	<form id="form" action="{% url 'partiel' table.id %}" method="POST">
+	{% csrf_token %}
+	<table>
+		<!--tr bgcolor="#b58900"-->
+		<tr bgcolor="#b58900">
+			<th>Heure</th>
+			<th>
+				<input type="hidden" id="part" name="part" value="{{ part }}"/>
+				<input type="hidden" id="max" name="max" value="{{ max }}"/>
+				Designation
+			</th>
+			<th>Quantité</th>
+			<th>Montant</th>
+			<th><input type="checkbox" id="paye_all" name="paye_all"/></th>
+		</tr>
+		{% for commande in commande_list %}
+			<!--tr bgcolor="{% cycle '#FFFFFF' '#EFEFEF' %}">
+			<tr bgcolor="{% cycle '#FFFFFF' '#b58900' %}"-->
+			<tr class="{% cycle 'ucolorer' 'colorer' %}">
+				<td align="center">{{ commande.heur_cmd | time:"H:i:s" }}</td>
+				<td>
+					<input type="hidden" id="paye_id_{{ forloop.counter0 }}" name="paye_id_{{ forloop.counter0 }}" placeholder="Payé"/>
+					<input type="hidden" id="_id_{{ forloop.counter0 }}" name="_id_{{ forloop.counter0 }}" value="{{ commande.id }}"/>
+					<input type="hidden" id="_montant_{{ forloop.counter0 }}" name="_montant_{{ forloop.counter0 }}" value="{{ commande.montant }}"/>
+					{{ commande.designation }}
+				</td>
+				<td align="center">{{ commande.quantite }}</td>
+				<td align="right">
+					<input type="hidden" id="montant_{{ forloop.counter0 }}" name="montant_{{ forloop.counter0 }}" value=0 />
+					{{ commande.montant }}
+				</td>
+				<td align="center"><input type="checkbox" id="paye_{{ forloop.counter0 }}" onchange="check_id_paye({{ forloop.counter0 }}) "{% if commande.paye %}checked{% endif %}/></td>
+			</tr>
+		{% endfor %}
+		<tr>
+			<td></td>
+                        <td bgcolor="#b58900" align="center"><b>Total</b></td>
+                        <td bgcolor="#b58900" align="right"><b>Ariary</b></td>
+                        <td bgcolor="#b58900" align="right"><b>{{ total }}</b></td>
+                        <td></td>
+                </tr>
+		<tr align="center">
+			<td></td>
+                        <td><a href="#paiement"><p>Payer partiel</p></td>
+                        <td><a href="{% url 'payer' table.id %}"><p>Payer tous</p></td>
+                        <td><a href = "{% url 'ajouter' table.id %}"><p>Ajouter</p></a></td>
+                </tr>
+	</table>
+<!--	</form>
+	<form action="addcommande" method="post" -->
+	<div id="paiement" align="center">
+		<table align="center">
+			<tr>
+				<td width=25%></td>
+				<td align="right">
+				<label class="ucolorer" for="net">Net à payer</label>
+				</td>
+				<td>
+				<input type="number" id="net" name="net" placeholder="{{ total|unlocalize }}" value="0" disabled >
+				</td>
+				<td width=25%></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td align="right">
+				<label class="ucolorer"  for="espece">Espece</label>
+				</td>
+				<td>
+				<input type="number" id="espece" name="espece"  placeholder = "0" autofocus>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td align="right">
+				<label class="ucolorer" for="rendu">À rendre</label>
+				</td>
+				<td>
+				<input type="number" id="rendu" name="rendu" placeholder = "0" disabled>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td>
+				<input type="submit" value="Payer" >
+				<input type="button" id="ticket" name="ticket" value="Ticket" onclick="ticket_caisse({{ table.id }})">
+				</td>
+				<td></td>
+			</tr>
+		</table>
+	</div>
+	</form>
+	<!--a href="#" id="notif">
+		<p>Inbox</p>
+		<span>3</span>
+	</a>
+	
+	<a href="{% url 'index' %}">Accueil</a-->
+
+{% endblock %}

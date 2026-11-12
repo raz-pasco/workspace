@@ -1,0 +1,668 @@
+from reportlab.lib import colors
+from django.core.files.storage import FileSystemStorage
+from reportlab.lib.units import inch
+
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Image , Table , TableStyle , Spacer, Paragraph , SimpleDocTemplate
+
+import datetime
+
+import io, os
+from reportlab.pdfgen import canvas
+
+from django.views.decorators.http import require_http_methods
+
+from django.shortcuts import redirect
+
+from django import forms
+from django.forms import formset_factory
+
+from django.shortcuts import get_object_or_404
+from django.views.generic import ListView
+
+from django.views import View
+from django.forms import modelformset_factory
+from django.db.models import F , Sum , Subquery
+from django.http import HttpResponse , FileResponse
+from django.shortcuts import render
+from .models import *
+
+class PdfView(View):
+	def get(self , request , **kwargs):
+		I = Image('logo.jpg')
+		I.drawHeight = 5.8*inch*I.drawHeight / I.drawWidth
+		I.drawWidth = 5.8*inch
+		now = datetime.now().strftime('%d-%m-%y à %Hh %Mmn %Ssec')
+		compte = Compte.objects.get( pk = self.kwargs['table_id'] )
+		commandes = Commande.objects.annotate( montant = Sum( 'designation__prix_vente' ) * F( 'quantite' ) ).filter ( table_id = compte.id ).filter(paye = False)
+		table = Compte.objects.get(id = self.kwargs['table_id'])
+		data = [['Heurs' , 'Designation PU' , 'Qte' , 'Montant' ]]
+		total = 0
+		os.environ["TZ"] = ""
+		for commande in commandes :
+			data.append([
+				(commande.heur_cmd+timedelta(hours=3)).strftime('%H:%M') ,
+				commande.designation ,
+				commande.quantite,
+				commande.montant
+				])
+			total += commande.montant
+		data.append( ['' , 'Total' , 'Ar.' , total ] )
+		data.append( ['' , '' , '' , '' ] )
+		styles = getSampleStyleSheet()
+		stylen = styles["Normal"]
+		style = styles["Title"]
+		data.append([ Paragraph("<fontSize=2><alignment=TA_CENTER>\:-D <i>Mankasitraka, amin'ny manaraka indray </i> ;-)</alignment></fontSize>" , style),'' ,'' ,''])
+		doc = SimpleDocTemplate("somefilename.pdf", leftMargin=0.5, rightMargin=2.5)
+		Story = [Spacer(1,0.2*inch)]
+#		Story = []
+		p = Paragraph("%s" % table.numero, style)
+		Story.append(I)
+		Story.append(p)
+		t=Table(data)
+		t.setStyle(TableStyle([
+#			('SIZE',(0,0),(-1,-1), 28),		# Font size
+			('SIZE',(0,0),(-1,-1), 12),		# Font size
+			('ALIGN',(0,0),(2,0),'CENTER'),		# Titres
+			('ALIGN',(3,0),(3,0),'RIGHT'),		# Titre Montant
+			('ALIGN',(0,1),(0,-3),'CENTER'),	# Heures
+			('ALIGN',(1,1),(1,-3),'LEFT'),		# Designation
+			('ALIGN',(2,1),(2,-3),'CENTER'),	# Quantite
+			('ALIGN',(3,1),(3,-3),'RIGHT'),		# Montant
+			('ALIGN',(1,-3),(1,-3),'CENTER'),	# Total
+			('ALIGN',(2,-2),(3,-2),'RIGHT'),	# Ar Montant
+			('SPAN',(0,-1),(-1,-1)),
+			('ALIGN',(0,-1),(-1,-1),'RIGHT'),
+		 	]))
+		t._argW[0]=1.0*inch
+		t._argW[1]=4.0*inch
+		t._argW[2]=1.5*inch
+		t._argW[3]=1.0*inch
+		Story.append(t)
+#		Story.append(p)
+
+		for i in range(5):
+			bogustext = ("This is Paragraph number %s. " % i) * 5
+			p = Paragraph(bogustext, style)
+#			Story.append(p)
+			Story.append(Spacer(1,0.2*inch))
+		doc.build(Story)
+
+		fs = FileSystemStorage()
+		with fs.open("somefilename.pdf") as pdf:
+			response = HttpResponse(pdf, content_type='application/pdf')
+			response['Content-Disposition'] = 'attachment; filename="%s %s.pdf"' % (table.numero, now)
+		return response
+
+
+class TicketPdf(View):
+	def get(self , request , **kwargs):
+		I = Image('logo.jpg')
+		I.drawHeight = 1.25*inch*I.drawHeight / I.drawWidth
+		I.drawWidth = 1.25*inch
+		now = datetime.now().strftime('%d-%m-%y à %Hh %Mmn %Ssec')
+		compte = Compte.objects.get( pk = self.kwargs['table_id'] )
+		styles = getSampleStyleSheet()
+		style = styles["Title"]
+		stylen = styles["Normal"]
+		p = Paragraph("%s" % compte.numero, style)
+		data = [[ I , p , datetime.now().strftime('%d/%m/%y') ]]
+		commandes = Commande.objects.annotate( montant = Sum( 'designation__prix_vente' ) * F( 'quantite' ) ).filter ( table_id = compte.id ).filter(paye = False)
+#		donnee = [[ I , p , '', datetime.now().strftime('%d/%m/%y') ]]
+		donnee = [['Heurs' , 'Designation' , 'Qté' , 'Montant' ]]
+		total = 0
+		for commande in commandes :
+			donnee.append([
+				commande.heur_cmd.strftime('%H:%M') ,
+				commande.designation ,
+				commande.quantite,
+				commande.montant
+				])
+			total += commande.montant
+		donnee.append( ['' , 'Total Net' , 'Ar.' , total ] )
+		espece = request.GET['espece']
+		donnee.append( ['' , 'Espece' , 'Ar.' , espece ] )
+		donnee.append( ['' , 'Rendu'  , 'Ar.' , int(espece)-int(total) ] )
+#		donnee.append( ['' , Paragraph("<align=CENTER><b>Rendu</b>", stylen) , 'Ar.' , int(espece)-int(total) ] )
+		td=Table(donnee)
+		td.setStyle(TableStyle([
+#			('SPAN',(1,0),(2,0)),
+			('ALIGN',(0,0),(3,0),'CENTER'),    # Titles
+			('ALIGN',(0,1),(0,-4),'CENTER'),   # Heures
+			('ALIGN',(1,1),(1,-4),'LEFT'),     # Designations
+			('ALIGN',(2,1),(2,-4),'CENTER'),   # Qtes
+			('ALIGN',(3,1),(3,-4),'RIGHT'),    # Montants
+			('ALIGN',(1,-3),(1,-3),'CENTER'),  # Total Net
+			('ALIGN',(2,-3),(2,-3),'RIGHT'),   # Ar.
+			('ALIGN',(3,-3),(3,-3),'RIGHT'),   # total
+			('ALIGN',(1,-2),(1,-2),'CENTER'),  # Espece
+			('ALIGN',(2,-2),(2,-2),'RIGHT'),   # Ar.
+			('ALIGN',(3,-2),(3,-2),'RIGHT'),   # espece
+			('ALIGN',(1,-1),(1,-1),'CENTER'),  # Rendu
+			('ALIGN',(2,-1),(2,-1),'RIGHT'),   # Ar.
+			('ALIGN',(-1,-1),(-1,-1),'RIGHT'), # rendu
+		 	]))
+		td._argW[0]=2.0*inch
+		td._argW[1]=2.0*inch
+		td._argW[2]=2.0*inch
+		td._argW[3]=1.5*inch
+		data.append( [ td ] )
+		p = Paragraph("<fontSize=1><i>Mankasitraka anao nitsidika</i></fontSize>" , stylen)
+		data.append( [ ':-D' , p , ';-)' ] )
+		doc = SimpleDocTemplate("somefilename.pdf")
+#		Story = [Spacer(1,0.2*inch)]
+		Story = []
+#		Story.append(I)
+#		Story.append(p)
+		t=Table(data)
+		t.setStyle(TableStyle([
+			('ALIGN',(0,0),(2,0),'CENTER'),
+			('ALIGN',(0,1),(2,1),'CENTER'),
+			('ALIGN',(0,-1),(0,-1),'RIGHT'),
+			('ALIGN',(1,-1),(1,-1),'CENTER'),
+			('ALIGN',(-1,-1),(-1,-1),'LEFT'),
+			('SPAN',(0,1),(2,1)),
+			('VALIGN',(0,0),(0,0),'TOP'),
+			('VALIGN',(2,0),(2,0),'TOP'),
+			('VALIGN',(0,-1),(0,-1),'MIDDLE'),
+			('VALIGN',(-1,-1),(-1,-1),'MIDDLE'),
+		 	]))
+		t._argW[0]=2.0*inch
+		t._argW[1]=2.0*inch
+		t._argW[2]=2.0*inch
+		Story.append(t)
+
+#		for i in range(5):
+#			bogustext = ("This is Paragraph number %s. " % i) * 5
+#			p = Paragraph(bogustext, style)
+#			Story.append(Spacer(1,0.2*inch))
+		doc.build(Story)
+
+		fs = FileSystemStorage()
+		with fs.open("somefilename.pdf") as pdf:
+			response = HttpResponse(pdf, content_type='application/pdf')
+			response['Content-Disposition'] = 'attachment; filename="N° %s %s.pdf"' % (compte.numero, now)
+		return response
+
+class TablePdf(View):
+	def get(self , request , **kwargs):
+		I = Image('logo.jpg')
+		I.drawHeight = 1.25*inch*I.drawHeight / I.drawWidth
+		I.drawWidth = 1.25*inch
+		now = datetime.now().strftime('%d-%m-%y à %Hh %Mmn %Ssec')
+		compte = Compte.objects.get( pk = self.kwargs['table_id'] )
+		styles = getSampleStyleSheet()
+		style = styles["Title"]
+		p = Paragraph("%s" % compte.numero, style)
+#		commandes = Commande.objects.annotate( montant = Sum( 'designation__prix_vente' ) * F( 'quantite' ) ).filter ( table_id = compte.id ).filter(paye = False)
+		data = [[ I , p , datetime.now().strftime('%d/%m/%y') ]]
+#		total = 0
+#		for commande in commandes :
+#			data.append([
+#				commande.heur_cmd.strftime('%H:%M') ,
+#				commande.designation ,
+#				commande.quantite,
+#				commande.montant
+#				])
+#			total += commande.montant
+#		data.append( ['' , 'Total' , 'total' ] )
+		stylen = styles["Normal"]
+		p = Paragraph("<fontSize=1><i>Mankasitraka anao nitsidika</i></fontSize>" , stylen)
+		data.append( [ ':-D' , p , ';-)' ] )
+		doc = SimpleDocTemplate("somefilename.pdf")
+		Story = [Spacer(1,0.2*inch)]
+#		Story = []
+#		Story.append(I)
+#		Story.append(p)
+		t=Table(data)
+		t.setStyle(TableStyle([
+			('ALIGN',(0,0),(2,0),'CENTER'),
+			('ALIGN',(0,1),(2,1),'CENTER'),
+			('ALIGN',(0,-1),(0,-1),'RIGHT'),
+			('ALIGN',(1,-1),(1,-1),'CENTER'),
+			('ALIGN',(-1,-1),(-1,-1),'LEFT'),
+#			('SPAN',(0,2),(-1,-1)),
+			('VALIGN',(0,0),(0,0),'TOP'),
+			('VALIGN',(2,0),(2,0),'TOP'),
+			('VALIGN',(0,-1),(0,-1),'MIDDLE'),
+			('VALIGN',(-1,-1),(-1,-1),'MIDDLE'),
+		 	]))
+		t._argW[0]=2.0*inch
+		t._argW[1]=2.0*inch
+		t._argW[2]=2.0*inch
+		Story.append(t)
+
+		for i in range(5):
+			bogustext = ("This is Paragraph number %s. " % i) * 5
+			p = Paragraph(bogustext, style)
+			Story.append(Spacer(1,0.2*inch))
+		doc.build(Story)
+
+		fs = FileSystemStorage()
+		with fs.open("somefilename.pdf") as pdf:
+			response = HttpResponse(pdf, content_type='application/pdf')
+			response['Content-Disposition'] = 'attachment; filename="N° %s %s.pdf"' % (compte.numero, now)
+		return response
+
+"""
+	def get(self, request, **kwargs ):
+		styles = getSampleStyleSheet()
+		styleN = styles['Normal']
+		styleH = styles['Heading1']
+		story = []
+		story.append(Paragraph("This is a Heading", styleH))
+		story.append(Paragraph("This is a Paragraph in <i>Normal</i> style.", styleN))
+		doc = SimpleDocTemplate('table.pdf' , pagesize = A4)
+		doc.build(story)
+		return doc
+
+	def get(self, request, **kwargs ):
+		now = datetime.now().strftime('%d-%m-%y à %Hh %Mmn %Ssec')
+		table = Compte.objects.get(id = self.kwargs['table_id'])
+		buffer = io.BytesIO()
+		p = canvas.Canvas(buffer)
+		p.drawString(100, 100, "%s du %s" % (table.numero , now ))
+		p.showPage()
+		p.save()
+		buffer.seek(0)
+		return FileResponse(buffer, as_attachment = True, filename = '%s %s.pdf' % (table.numero, now))
+"""
+
+class CommandeForm(forms.Form):
+	compte = forms.CharField(widget=forms.HiddenInput())
+	designation = forms.CharField( label = False , widget=forms.TextInput( attrs = {'readonly':'readonly'} ) )
+#	designation = forms.CharField( desabled = True , label = False )
+	prix_vente = forms.IntegerField(label = False, required = True)
+#	quantite = forms.IntegerField(step_size = 4 , widget=forms.NumberInput(attrs = {'size': '4'}) , label = False)
+	quantite = forms.IntegerField(label = False , required = True)
+	montant = forms.IntegerField(widget=forms.HiddenInput())
+
+	quantite.widget.attrs.update( size = '4' )
+
+class ListArticle(View):
+
+	add = False
+
+	def get(self , request , **kwargs):
+		table = Compte.objects.get(id = self.kwargs['table_id'])
+		save_list = []
+		list = []
+		alpha_list = []
+		for produit in Produit.objects.all().order_by('designation'):
+			list.append({
+				'compte' : self.kwargs['table_id'] ,
+#				'designation' : '%s %s' % ( produit.designation , produit.prix_vente ) ,
+				'designation' : '%s' %  produit.designation ,
+				'prix_vente' : produit.prix_vente ,
+				'quantite' : 0 ,
+				'montant' : 0 ,
+			})
+			if "Poisson 1" in str(produit.designation) and not "P1" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s1' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 2" in str(produit.designation) and not "P2" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s2' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 3" in str(produit.designation) and not "P3" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s3' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 4" in str(produit.designation) and not "P4" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s4' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 5" in str(produit.designation) and not "P5" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s5' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 6" in str(produit.designation) and not "P6" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s6' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 7" in str(produit.designation) and not "P7" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s7' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 8" in str(produit.designation) and not "P8" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s8' %  str(produit.designation)[0] ,
+				})
+			elif "Poisson 9" in str(produit.designation) and not "P9" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s9' %  str(produit.designation)[0] ,
+				},)
+				alpha_list.append({
+					'designation': 'P'
+				},)
+			elif "P" in str(produit.designation[0]) and not "Poisson" in str(produit.designation) and not "P" in str(alpha_list):
+				alpha_list.append({
+					'designation' : '%s' %  str(produit.designation)[0] ,
+				})
+			elif not str(produit.designation)[0] in str(alpha_list) :
+				alpha_list.append({
+					'designation' : '%s' %  str(produit.designation)[0] ,
+				})
+
+		ArticleFormSet = formset_factory( CommandeForm , max_num = Produit.objects.count() )
+		formset = ArticleFormSet( initial = list )
+		return render(request, 'sigposite/article_list.html', {
+				'table_id' : self.kwargs['table_id'] ,
+				'titre': table.numero ,
+				'formset': formset ,
+				'design': alpha_list,
+				'add': self.add
+			})
+
+	def post(self , request , **kwargs):
+		save_list = []
+		list = []
+		t = 0
+		table = Compte.objects.get(id = self.kwargs['table_id'])
+		for i in range(Produit.objects.count()):
+			if int('0%s'  % request.POST.get('form-%s-quantite' % i , default = '0' )) > 0 :
+				list.append({
+					'compte' : self.kwargs['table_id'] ,
+					'designation' : request.POST.get('form-%s-designation' % i , default ='') ,
+					'prix_vente' : request.POST.get('form-%s-prix_vente' % i , '0' ) ,
+					'quantite' : int( request.POST.get('form-%s-quantite' % i , default = '0' )) ,
+					'montant' : int(request.POST.get('form-%s-prix_vente' % i , default = '0' )) * int(request.POST.get('form-%s-quantite' % i , default = '0' )) ,
+				})
+				save_list.append(Commande(
+						table = table ,
+						designation = Produit.objects.get(designation = request.POST.get('form-%s-designation' % i )) ,
+						quantite =  request.POST.get('form-%s-quantite' % i )
+					)
+				)
+#			else:
+#				return redirect('commandes' , self.kwargs['table_id'])
+		if request.POST.get('add', default = 'False') in "True" :
+			for i in range(len(save_list)):
+				save_list[i].save()
+			return redirect('commandes' , self.kwargs['table_id'])
+#			self.add = False
+
+			"""
+			else :
+				for i in range(len(request.POST.getlist('quantite'))):
+					list.append({
+						'compte' : self.kwargs['table_id'] ,
+						'designation' : produit.designation ,
+						'prix_vente' : produit.prix_vente ,
+						'quantite' : request.POST.get('quantite'),
+					})
+			"""
+#			t += produit.prix_vent * request.POST.get('quantite')
+#		self.add = True
+		ArticleFormSet = formset_factory( CommandeForm , max_num = Produit.objects.count(), extra = 0)
+		formset = ArticleFormSet( initial = list )
+		return render(request, 'sigposite/confirm_commande.html', {
+				'titre' : table.numero ,
+				'table_id' : self.kwargs['table_id'] ,
+				'formset': formset ,
+				'total': request.POST.get('add' , False ) ,
+				'add': self.add ,
+		})
+
+
+#class CommandeList(ListView):
+class CommandeList(View):
+
+	paye = False
+	part = False
+	livre = True
+	context_object_name = 'commande_list'
+
+#	@require_http_methods(["GET", "POST"])
+	def post(self, request, **kwargs):
+		if request.POST.get('paye', default = 'False') in "True" :
+			Commande.objects.filter( table__id = self.kwargs['table_id'] ).update( paye = True )
+			return render(request, 'sigposite/payer.html' , self.get_context_data() )
+		elif request.POST.get('part', default = 'False') in "True" :
+			for i in range(int(request.POST.get('max', 0))):
+				if not request.POST.get('paye_id_%s' % i, 0) in '' :
+					Commande.objects.filter( id = int(request.POST.get('paye_id_%s' % i, 0)) ).update( paye = True )
+			return render(request, 'sigposite/partiel.html' , self.get_context_data() )
+		elif request.POST.get('livre', default = 'False') in "True" :
+			for i in range(int(request.POST.get('max', 0))):
+				if not request.POST.get('livre_id_%s' % i, default = '' ) in '' :
+					Commande.objects.filter( id = int(request.POST.get('livre_id_%s' % i, 0)) ).update( livre = True )
+			return render(request, 'sigposite/commande_list.html' , self.get_context_data() )
+		return render(request, 'sigposite/commande_list.html',
+#			'formset': formset
+#			self.get_queryset(),
+			self.get_context_data(),
+		)
+
+	def get(self, request, **kwargs):
+		cmd = []
+		if self.paye == True :
+			return render(request, 'sigposite/payer.html' , self.get_context_data(), )
+		elif self.part == True :
+			for i in range(int(request.POST.get('max', 0))) :
+				cmd.append(Commande.objects.get(id = request.POST.get('paye_id_%s' % i, 0)))
+			return render(request, 'sigposite/partiel.html' , self.get_context_data(), )
+		else:
+			return render(request, 'sigposite/commande_list.html',
+				self.get_context_data(),
+			)
+
+	def get_queryset(self):
+#		compte = get_object_or_404( Compte , pk = request.POST.get(table_id, '') )
+		self.compte = get_object_or_404( Compte , pk = self.kwargs['table_id'] )
+		return Commande.objects.annotate( montant = Sum( 'designation__prix_vente' ) * F( 'quantite' ) ).filter ( table_id = self.compte.id ).filter(paye = False)
+
+	def get_context_data(self, **kwargs):
+		t = 0
+		# Call the base implementation first to get a context
+#		context = super().get_context_data(**kwargs)
+		context = {}
+		# Add in a QuerySet of all the books
+		commandes = self.get_queryset()
+		context['commande_list'] = commandes
+		for cmd in commandes :
+			t += cmd.montant
+		context['titre'] = self.compte
+		context['max'] = commandes.count()
+		context['table'] = self.compte
+		context['total'] = t
+		context['part'] = self.part
+		context['paye'] = self.paye
+		context['livre'] = self.livre
+		return context
+
+class VenteList(ListView):
+	context_object_name = 'vendu_list'
+	date_debut=''
+	date_fin=''
+
+	def get(self, request, **kwargs):
+		return render(request, 'sigposite/vendu_list.html' , self.get_context_data(), )
+
+	def post(self, request, **kwargs):
+		self.date_debut = request.POST.get('date_debut', default = datetime.now())
+		self.date_fin = request.POST.get('date_fin', default = datetime.now())
+		return render(request, 'sigposite/vendu_list.html' , self.get_context_data(), )
+
+	def get_queryset(self):
+#		return Produit.objects.filter(commande__paye=True).annotate(qte = Sum('commande__quantite'), montant = F('prix_vente') * Sum('commande__quantite')).order_by('designation').filter(commande__date_cmd__gte = self.date_debut ).filter(commande__date_cmd__lte = self.date_fin )
+#		return Produit.objects.filter(commande__date_cmd__gte = self.date_debut ).filter(commande__date_cmd__lte = self.date_fin ).filter(commande__paye=True).annotate(qte = Sum('commande__quantite'), montant = F('prix_vente') * Sum('commande__quantite')).order_by('designation')
+		return Commande.objects.filter(paye = True).filter( date_cmd__gte = self.date_debut ).filter( date_cmd__lte = self.date_fin ).annotate(qte = Sum('quantite'), prix_vente = Sum('designation__prix_vente'), montant = Sum('quantite') * F('designation__prix_vente')).order_by('designation__designation')
+
+
+	def get_context_data(self, **kwargs):
+		t = 0
+		vente = self.get_queryset()
+		for v in vente :
+			t += v.montant
+		context = {}
+		context['titre'] = 'VENTE DU %s AU %s' % ( self.date_debut , self.date_fin )
+		context['vendu_list'] = vente
+		context['total'] = t
+		return context
+
+class FormDate(forms.Form):
+	date_debut = forms.DateTimeField( label='Date debut' , widget=forms.DateInput(attrs={'type': 'date'}))
+	date_fin = forms.DateField( label='Date fin' , widget=forms.DateInput(attrs={'type': 'date'}))
+
+class FormControl(View):
+
+	def get(self, request, **kwargs):
+		form = FormDate()
+		return render(request, 'sigposite/form_control.html' , { 'titre' : "CONTROL" , 'form' : form}, )
+
+	def post(self, request, **kwargs):
+		if request.method == 'POST':
+			form = FormDate(request.POST)
+			if form.is_valid():
+				return render(request, 'sigposite/vendu_list.html' , {
+					'date_debut': request.POST.get('date_debut', datetime.now()),
+					'date_fin': request.POST.get('date_fin', datetime.now()),
+				})
+
+
+'''
+
+	def get(self, request, **kwargs):
+		return render(request, 'sigposite/form_control.html' , self.get_context_data(), )
+
+	def post(self, request, **kwargs):
+		return render(request, 'sigposite/vendu_list.html' , self.get_context_data(), )
+
+	def get_context_data(self, request):
+		t = 0
+		date_debut = date(request.POST.get('date_debut', default = '2023-07-12'))
+		date_fin = date(request.POST.get('date_fin', default = '2023-07-12'))
+		vente = Produit.objects.filter(commande__paye=True).filter(commande__date_cmd__gte = date_debut ).filter(commande__date_cmd__lte = date_fin ).annotate(qte = Sum('commande__quantite'), montant = F('prix_vente') * Sum('commande__quantite')).order_by('designation')
+		for v in vente :
+			t += v.montant
+		context = {}
+		context['titre'] = 'VENTE DU %s AU %s' % date_debut , date_fin
+		context['vendu_list'] = vente
+		context['total'] = t
+		return context
+'''
+
+
+class RalList(ListView):
+	context_object_name = 'ral_list'
+
+	def get(self, request, **kwargs):
+		return render(request, 'sigposite/ral_list.html' , self.get_context_data(), )
+
+	def get_queryset(self):
+		return Commande.objects.filter(livre=False).order_by('heur_cmd')
+
+	def get_context_data(self, **kwargs):
+		context = {}
+		context['titre'] = "REST À LIVRER"
+		context['ral_list'] = self.get_queryset()
+		return context
+
+class CompteList(ListView):
+	livre = False
+	compte = False
+	context_object_name = 'compte_list'
+
+	def get_queryset(self):
+		if self.livre :
+			return Compte.objects.filter(id__in = Commande.objects.values_list('table').filter(livre=False).distinct())
+		if not self.compte :
+			return Compte.objects.filter(id__in = Commande.objects.values_list('table').filter(paye=False).distinct())
+		else:
+			return Compte.objects.exclude(id__in = Commande.objects.values_list('table').filter(paye=False).distinct())
+
+	def get_context_data(self, **kwargs):
+		context = {}
+		compte = self.get_queryset()
+		context['titre'] = "CLIENTS"
+		context['tb'] = compte.filter(numero__startswith="TABLE ")
+		context['ta'] = compte.filter(numero__startswith="TA ")
+		context['tr'] = compte.filter(numero__startswith="TR ")
+		context['salon'] = compte.filter(numero__startswith="SALON ")
+		context['comptoire'] = compte.filter(numero__startswith="COMPTOIRE ")
+		context['exterieur'] = compte.filter(numero__startswith="EXTERIEUR ")
+		context['vente'] = compte.filter(numero__startswith="VENTE ")
+		return context
+
+class ListBtCommande(View):
+	def get ( self, request , table_id ):
+		return render ( request, "sigposite/forms.html" , {
+			"produits" : Produit.objects.all(),
+			"table_id" : table_id
+		})
+
+
+
+class GetCommande(View):
+	def get ( self, request ):
+		CommandeFormSet = modelformset_factory(Commande , exclude=('id', 'table',))
+		formset = CommandeFormSet()
+
+		## if this is a POST request we need to process the form data
+#		if request.method == 'POST':
+		## create a form instance and populate it with data from the request:
+
+		#form = NameForm(request.POST)
+		## check whether it's valid:
+#		if formset.is_valid():
+			## process the data in form.cleaned_data as required
+			## ...
+			## redirect to a new URL:
+#			CommandeForm(request.POST)
+			## Save a new Article object from the form's data.
+#			new_commande = f.save()
+			## Create a form to edit an existing Article, but use
+			## POST data to populate the form.
+			# a = Article.objects.get(pk=1)
+			# f = ArticleForm(request.POST, instance=a)
+			# f.save()
+
+#			return HttpResponseRedirect('/thanks/')
+		## if a GET (or any other method) we'll create a blank form
+#		else:
+#			formset = CommandeFormSet()
+		return render(request, 'sigposite/forms.html', {'formset': formset})
+
+# Global variables here.
+
+
+# Create your views here.
+def index ( request ):
+#    return HttpResponse ( " Bienvenu au Système Integré de Gestion de Poisson d'Or " )
+    return render ( request, "sigposite/index.html" , {
+        "clients" : Client.objects.all()
+    })
+
+
+def commandes ( request , table_id ) :
+    commande = Commande.objects.annotate( montant = Sum( 'designation__prix_vente' ) * F( 'quantite' ) ).filter ( table_id = table_id )
+    t = 0
+    total = {}
+    for cmd in commande:
+         t += cmd.montant
+    total['total'] = t
+
+    return render(request , "sigposite/commandes.html" , {
+       "title" : commande[:1] ,
+       "totals": total ,
+       "commandes" : commande 
+#       "form" : form
+    })
+
+def commander ( request ) :
+    if request.method == "POST":
+        table = int(request.POST["table"])
+        designation = int(request.POST["designation"])
+        quantite = int(request.POST["quantite"])
+        commande = Commande( table = table , designation = designation , quantite = quantite  )
+        commande.save()
+        return HttpResponseRedirect(reverse("commandes", args=(table.id,)))
+
+def cuisine ( request , commande_id ) :
+    return HttpResponse ( " Voici les commandes en cours: %s " % commande_id )
+
+def livraison ( request , commande_id ) :
+    return HttpResponse ( " Les commande %s sont prêt à etre livrées " % commande_id )

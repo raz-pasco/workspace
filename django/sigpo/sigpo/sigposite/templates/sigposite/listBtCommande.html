@@ -1,0 +1,11 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+        <h1>Nouveau Commande</h1>
+        <ul>
+                {% for produit in produits %}
+                        <li><p><a href="'addcommande' client.id/">{{ produit.designation }}</a></p></li>
+                {% endfor %}
+        </ul>
+	<a href="../commandes/{{ table_id }}">Retour</a>
+{% endblock %}

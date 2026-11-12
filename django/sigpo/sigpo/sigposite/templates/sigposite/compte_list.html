@@ -1,0 +1,49 @@
+{% extends "sigposite/layout.html" %}
+{% load static %}
+{% block body %}
+	<div align="right">
+		<a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+		<a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+		<a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+		<a href="{% url 'control' %}"><p>Control</p></a></li>
+		<a href="{% url 'commandes' 98 %}"><p>Vente direct</p></a></li>
+		<a href="{% url 'nouveau' %}"><p>+</p></a></li>
+		<!--a href="{% url 'form' 4 %}"><p>-</p></a></li></br-->
+	</div>
+        <table>
+		<tr>
+			<td>
+        	        {% for client in ta %}
+			<a href="{% url 'commandes' client.id  %}"><p>{{ client.numero }}</p></a>
+	                {% endfor %}
+        	        {% for client in exterieur %}
+			<a href="{% url 'commandes' client.id  %}"><p>{{ client.numero }}</p></a>
+	                {% endfor %}
+			</td>
+			<td>
+        	        {% for client in tr %}
+			<a href="{% url 'commandes' client.id  %}"><p>{{ client.numero }}</p></a>
+	                {% endfor %}
+			</td>
+			<td>
+        	        {% for client in salon %}
+			<a href="{% url 'commandes' client.id  %}"><p>{{ client.numero }}</p></a>
+	                {% endfor %}
+        	        {% for client in tb %}
+			<a href="{% url 'commandes' client.id  %}"><p>{{ client.numero }}</p></a>
+	                {% endfor %}
+        	        {% for client in comptoire %}
+			<a href="{% url 'commandes' client.id  %}"><p>{{ client.numero }}</p></a>
+	                {% endfor %}
+			</td>
+		</tr>
+        </table>
+	<div align="right">
+		<a href="{% url 'index' %}"><p>Non payé(s)</p></a></li>
+		<a href="{% url 'nonlivre' %}"><p>Non livré(s)</p></a></li>
+		<a href="{% url 'ral' %}"><p>Reste à livrer</p></a></li>
+		<a href="{% url 'control' %}"><p>Control</p></a></li>
+		<a href="{% url 'commandes' 98 %}"><p>Vente direct</p></a></li>
+		<a href="{% url 'nouveau' %}"><p>+</p></a></li></br>
+	</div>
+{% endblock %}
